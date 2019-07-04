@@ -1,7 +1,7 @@
 <!DOCTYPE idea-plugin PUBLIC "Plugin/DTD" "http://plugins.intellij.net/plugin.dtd">
 <idea-plugin url="https://github.com/krasa/StringManipulation">
     <name>String Manipulation</name>
-    <version>7.2.182.000.3</version>
+    <version>7.2.182.000.4</version>
     <vendor email="vojta.krasa@gmail.com">original author: Olivier Smedile, current maintainer: Vojtech Krasa</vendor>
     <idea-version since-build="182.000"/>
 
@@ -370,6 +370,11 @@
                         class="osmedile.intellij.stringmanip.filter.RemoveAllSpacesAction"
                         text="Remove all spaces"
                         description="Remove all spaces in selected text">
+                </action>
+                <action id="osmedile.intellij.stringmanip.ConvertTabs"
+                        class="osmedile.intellij.stringmanip.filter.ConvertTabToSpaces"
+                        text="Convert Tabs to spaces"
+                        description="Convert all tabs to spaces in selected text ">
                 </action>
             </group>
 

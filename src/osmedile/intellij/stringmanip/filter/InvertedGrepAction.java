@@ -10,5 +10,6 @@ public class InvertedGrepAction extends GrepAction {
 				return !GREP_FILTER.execute(text, grepos);
 			}
 		});
+		dialogTitle = "Hallo";
 	}
 }

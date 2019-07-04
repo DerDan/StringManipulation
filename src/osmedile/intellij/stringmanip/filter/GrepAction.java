@@ -27,6 +27,8 @@ import java.util.regex.Pattern;
  */
 public class GrepAction extends MyEditorAction {
 
+	protected String dialogTitle= "Grep Text";
+
 	protected static final GrepFilter GREP_FILTER = new GrepFilter() {
 		@Override
 		public boolean execute(String text, Pair<String, Boolean> grepos) {
@@ -54,7 +56,7 @@ public class GrepAction extends MyEditorAction {
 			protected Pair<Boolean, Pair<String, Boolean>> beforeWriteAction(Editor editor, DataContext dataContext) {
 				final SelectionModel selectionModel = editor.getSelectionModel();
 				if (selectionModel.hasSelection()) {
-					InputDialogWithCheckbox dialog = new InputDialogWithCheckbox("", "Grep Text", "Regex", false, true, null, "", new MyInputValidator() {
+					InputDialogWithCheckbox dialog = new InputDialogWithCheckbox("", dialogTitle, "Regex", false, true, null, "", new MyInputValidator() {
 						@Nullable
 						@Override
 						public String getErrorText(String inputString) {

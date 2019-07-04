@@ -16,101 +16,106 @@ import shaded.org.apache.commons.lang3.StringUtils;
  */
 public abstract class AbstractStringManipAction<T> extends MyEditorAction {
 
-	protected final boolean setupHandler;
-	
-	protected AbstractStringManipAction() {
-		this(true);
-	}
+    protected final boolean setupHandler;
 
-	protected AbstractStringManipAction(boolean setupHandler) {
-		super(null);
-		if (setupHandler) {
-			this.setupHandler(new MyEditorWriteActionHandler<T>(getActionClass()) {
-				@NotNull
-				@Override
-				protected Pair<Boolean, T> beforeWriteAction(Editor editor, DataContext dataContext) {
-					return AbstractStringManipAction.this.beforeWriteAction(editor, dataContext);
-				}
+    protected AbstractStringManipAction() {
+        this(true);
+    }
 
-				@Override
-				protected void executeWriteAction(Editor editor, @Nullable Caret caret, final DataContext dataContext, final T additionalParam) {
-					executeMyWriteAction(editor, dataContext, additionalParam);
-				}
+    protected AbstractStringManipAction(boolean setupHandler) {
+        super(null);
+        if (setupHandler) {
+            this.setupHandler(new MyEditorWriteActionHandler<T>(getActionClass()) {
+                @NotNull
+                @Override
+                protected Pair<Boolean, T> beforeWriteAction(Editor editor, DataContext dataContext) {
+                    return AbstractStringManipAction.this.beforeWriteAction(editor, dataContext);
+                }
 
-			});
-		}
-		this.setupHandler = setupHandler;
-	}
+                @Override
+                protected void executeWriteAction(Editor editor, @Nullable Caret caret, final DataContext dataContext, final T additionalParam) {
+                    executeMyWriteAction(editor, dataContext, additionalParam);
+                }
 
-	@NotNull
-	public Pair<Boolean, T> beforeWriteAction(Editor editor, DataContext dataContext) {
-		return new Pair<Boolean, T>(true, null);
-	}
+            });
+        }
+        this.setupHandler = setupHandler;
+    }
 
-	protected final Pair<Boolean, T> stopExecution() {
-		return new Pair<Boolean, T>(false, null);
-	}
+    @NotNull
+    public Pair<Boolean, T> beforeWriteAction(Editor editor, DataContext dataContext) {
+        return new Pair<Boolean, T>(true, null);
+    }
 
-	protected final Pair<Boolean, T> continueExecution(T param) {
-		return new Pair<Boolean, T>(true, param);
-	}
+    protected final Pair<Boolean, T> stopExecution() {
+        return new Pair<Boolean, T>(false, null);
+    }
 
-	protected final Pair<Boolean, T> continueExecution() {
-		return new Pair<Boolean, T>(true, null);
-	}
+    protected final Pair<Boolean, T> continueExecution(T param) {
+        return new Pair<Boolean, T>(true, param);
+    }
 
-	protected void executeMyWriteAction(Editor editor, final DataContext dataContext, final T additionalParam) {
-		editor.getCaretModel().runForEachCaret(new CaretAction() {
-			@Override
-			public void perform(Caret caret) {
-				executeMyWriteActionPerCaret(caret.getEditor(), caret, dataContext, additionalParam);
-			}
-		});
-	}
+    protected final Pair<Boolean, T> continueExecution() {
+        return new Pair<Boolean, T>(true, null);
+    }
 
-	protected void executeMyWriteActionPerCaret(Editor editor, Caret caret, DataContext dataContext, T additionalParam) {
-		final SelectionModel selectionModel = editor.getSelectionModel();
-		String selectedText = selectionModel.getSelectedText();
+    protected void executeMyWriteAction(Editor editor, final DataContext dataContext, final T additionalParam) {
+        editor.getCaretModel().runForEachCaret(new CaretAction() {
+            @Override
+            public void perform(Caret caret) {
+                executeMyWriteActionPerCaret(caret.getEditor(), caret, dataContext, additionalParam);
+            }
+        });
+    }
 
-		if (selectedText == null) {
-			selectSomethingUnderCaret(editor, dataContext, selectionModel);
-			selectedText = selectionModel.getSelectedText();
+    protected int selectionStart = 0;
 
-			if (selectedText == null) {
-				return;
-			}
-		}
+    protected void executeMyWriteActionPerCaret(Editor editor, Caret caret, DataContext dataContext, T additionalParam) {
+        final SelectionModel selectionModel = editor.getSelectionModel();
+        String selectedText = selectionModel.getSelectedText();
+        if (selectedText == null) {
+            selectSomethingUnderCaret(editor, dataContext, selectionModel);
+            selectedText = selectionModel.getSelectedText();
 
-		String s = transformSelection(editor, dataContext, selectedText, additionalParam);
-		s = s.replace("\r\n", "\n");
-		s = s.replace("\r", "\n");
+            if (selectedText == null) {
+                return;
+            }
+            selectionStart = 0;
+        } else {
+            selectionStart = caret.getSelectionStartPosition().column;
+        }
+
+        String s = transformSelection(editor, dataContext, selectedText, additionalParam);
+        s = s.replace("\r\n", "\n");
+        s = s.replace("\r", "\n");
         editor.getDocument().replaceString(selectionModel.getSelectionStart(), selectionModel.getSelectionEnd(), s);
     }
 
 
-	protected String transformSelection(Editor editor, DataContext dataContext, String selectedText, T additionalParam) {
-		String[] textParts = selectedText.split("\n");
+    protected String transformSelection(Editor editor, DataContext dataContext, String selectedText, T additionalParam) {
+        String[] textParts = selectedText.split("\n");
 
-		for (int i = 0; i < textParts.length; i++) {
-			textParts[i] = transformByLine(textParts[i]);
-		}
+        for (int i = 0; i < textParts.length; i++) {
+            textParts[i] = transformByLine(textParts[i]);
+            selectionStart = 0; // reset line offset
+        }
 
-		String join = StringUtils.join(textParts, '\n');
+        String join = StringUtils.join(textParts, '\n');
 
-		if (selectedText.endsWith("\n")) {
-			return join + "\n";
-		}
-		return join;
-	}
+        if (selectedText.endsWith("\n")) {
+            return join + "\n";
+        }
+        return join;
+    }
 
-	protected boolean selectSomethingUnderCaret(Editor editor, DataContext dataContext, SelectionModel selectionModel) {
-		selectionModel.selectLineAtCaret();
-		String selectedText = selectionModel.getSelectedText();
-		if (selectedText != null && selectedText.endsWith("\n")) {
-			selectionModel.setSelection(selectionModel.getSelectionStart(), selectionModel.getSelectionEnd() - 1);
-		}
-		return true;
-	}
+    protected boolean selectSomethingUnderCaret(Editor editor, DataContext dataContext, SelectionModel selectionModel) {
+        selectionModel.selectLineAtCaret();
+        String selectedText = selectionModel.getSelectedText();
+        if (selectedText != null && selectedText.endsWith("\n")) {
+            selectionModel.setSelection(selectionModel.getSelectionStart(), selectionModel.getSelectionEnd() - 1);
+        }
+        return true;
+    }
 
 	public abstract String transformByLine(String s);
 }
